@@ -1,0 +1,61 @@
+services:
+  #  rabbitmq:
+  #    container_name: rabbitmq
+  #    image: rabbitmq:3-management
+  #    environment:
+  #      - 'RABBITMQ_DEFAULT_PASS=secret'
+  #      - 'RABBITMQ_DEFAULT_USER=myuser'
+  #    restart: always
+  #    ports:
+  #      - 5672:5672
+  #      - 15672:15672
+  #    networks:
+  #      - pedido-network
+  #    volumes:
+  #      - rabbitmq-data:/data/rabbit-mq
+
+  pedido:
+    container_name: pedido
+    image: pedido
+    build:
+      context: .
+      dockerfile: Dockerfile
+    links:
+      #      - rabbitmq
+      - mongo
+    depends_on:
+      #      - rabbitmq
+      - mongo
+    networks:
+      - pedido-network
+    volumes:
+      - pedido-data:/data/pedido
+    environment:
+      - RABBITMQ_USERNAME=myuser
+      - RABBITMQ_PASS=secret
+      - MONGODB_USERNAME=root
+      - MONGODB_PASS=rootpass
+    ports:
+      - 8081:8081
+    restart: always
+
+  mongo:
+    image: mongo:latest  # Imagem oficial do MongoDB
+    container_name: mongo-container
+    ports:
+      - "27019:27017"  # Mapeia a porta 27019 do host para a porta 27017 do container
+    volumes:
+      - mongo-data:/data/db  # Volume para persistir os dados do banco de dados
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root  # Defina o nome de usuário root
+      - MONGO_INITDB_ROOT_PASSWORD=rootpass  # Defina a senha para o usuário root
+    networks:
+      - pedido-network
+
+networks:
+  pedido-network:
+
+volumes:
+  #  rabbitmq-data:
+  pedido-data:
+  mongo-data:

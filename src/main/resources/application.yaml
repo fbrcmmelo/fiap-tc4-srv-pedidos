@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: pedidos
+  rabbitmq:
+    host: rabbitmq
+    username: ${RABBITMQ_USERNAME:userNotFound}
+    password: ${RABBITMQ_PASS:passNotFound}
+  data:
+    mongodb:
+      host: mongo
+      port: 27017
+      database: pedido
+      username: ${MONGODB_USERNAME}
+      password: ${MONGODB_PASSWORD}
+      authentication-database: admin
+server:
+  port: 8081
