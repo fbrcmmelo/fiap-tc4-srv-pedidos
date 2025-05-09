@@ -1,6 +1,8 @@
 package com.fiap.tc4_srv_pedidos.controller;
 
-import com.fiap.tc4_srv_pedidos.usecases.IFazerPedidoUseCase;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fiap.tc4_srv_pedidos.domain.Pedido;
+import com.fiap.tc4_srv_pedidos.usecases.IGerarPedidoUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -10,11 +12,12 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class PedidoController {
 
-    private final IFazerPedidoUseCase fazerPedidoUseCase;
+    private final IGerarPedidoUseCase gerarPedidoUseCase;
 
-    public void makeOrder(final FazerPedidoRequest request) {
+    public void gerarPedido(String mensagem) {
         try {
-            this.fazerPedidoUseCase.fazerPedido(request);
+            final var pedido = new ObjectMapper().readValue(mensagem, Pedido.class);
+            this.gerarPedidoUseCase.gerar(pedido);
         } catch (Exception e) {
             log.error("Falha ao gerar pedido, erro: {}", e.getMessage());
         }

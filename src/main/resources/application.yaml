@@ -2,16 +2,19 @@ spring:
   application:
     name: pedidos
   rabbitmq:
-    host: rabbitmq
-    username: ${RABBITMQ_USERNAME:userNotFound}
-    password: ${RABBITMQ_PASS:passNotFound}
+    #    host: rabbitmq
+    host: localhost
+    port: 5672
+    username: ${RABBITMQ_USERNAME:myuser}
+    password: ${RABBITMQ_PASS:secret}
   data:
     mongodb:
-      host: mongo
+      #      host: mongo
+      host: localhost
       port: 27017
       database: pedido
-      username: ${MONGODB_USERNAME}
-      password: ${MONGODB_PASSWORD}
+      username: ${MONGODB_USERNAME:root}
+      password: ${MONGODB_PASSWORD:rootpass}
       authentication-database: admin
 server:
   port: 8081

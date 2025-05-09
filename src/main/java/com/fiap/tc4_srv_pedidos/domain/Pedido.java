@@ -1,11 +1,13 @@
 package com.fiap.tc4_srv_pedidos.domain;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.*;
 
 @Getter
+@NoArgsConstructor
 public class Pedido {
 
     private String id;

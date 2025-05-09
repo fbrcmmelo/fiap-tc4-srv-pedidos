@@ -23,7 +23,7 @@ public class RabbitMqConnectionConfig {
 
     @Bean
     MessageListenerAdapter messageListenerAdapter(PedidoController consumer) {
-        return new MessageListenerAdapter(consumer, "makeOrder");
+        return new MessageListenerAdapter(consumer, "gerarPedido");
     }
 
 }
