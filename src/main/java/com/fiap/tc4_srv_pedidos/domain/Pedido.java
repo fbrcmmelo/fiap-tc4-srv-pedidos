@@ -1,10 +1,14 @@
 package com.fiap.tc4_srv_pedidos.domain;
 
+import com.fiap.tc4_srv_pedidos.gateway.jpa.PedidoEntityJpa;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Getter
 @NoArgsConstructor
@@ -15,7 +19,7 @@ public class Pedido {
     private DadosCartaoCliente dadosCartao;
     private List<ProdutoPedido> produtoPedidos;
     private StatusPedidoEnum status;
-    private UUID transacaoId;
+    private String transacaoId;
     private Instant criadoEm;
     private Instant atualizadoEm;
     private Instant deletadoEm;
@@ -33,5 +37,22 @@ public class Pedido {
         this.clienteId = clienteId;
         this.dadosCartao = dadosCartao;
         this.produtoPedidos = produtoPedidos;
+    }
+
+    public Pedido(PedidoEntityJpa entityJpa) {
+        this.id = entityJpa.getId();
+        this.clienteId = entityJpa.getClienteId();
+        this.produtoPedidos = entityJpa.getProdutoPedidos();
+        this.status = entityJpa.getStatus();
+        this.transacaoId = entityJpa.getTransacaoId();
+        this.criadoEm = entityJpa.getCriadoEm();
+        this.atualizadoEm = entityJpa.getAtualizadoEm();
+        this.deletadoEm = entityJpa.getDeletadoEm();
+    }
+
+    public void atualizarStatus(StatusPedidoEnum status) {
+        Objects.requireNonNull(status, "Status do pedido não pode ser nulo");
+        this.status = status;
+        this.atualizadoEm = Instant.now();
     }
 }

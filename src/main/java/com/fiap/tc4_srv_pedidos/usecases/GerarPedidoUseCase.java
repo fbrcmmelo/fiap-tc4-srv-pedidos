@@ -1,7 +1,7 @@
 package com.fiap.tc4_srv_pedidos.usecases;
 
 import com.fiap.tc4_srv_pedidos.domain.Pedido;
-import com.fiap.tc4_srv_pedidos.gateway.IFazerPedidoGateway;
+import com.fiap.tc4_srv_pedidos.gateway.IPedidoGateway;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class GerarPedidoUseCase implements IGerarPedidoUseCase {
 
-    private final IFazerPedidoGateway gateway;
+    private final IPedidoGateway gateway;
 
     @Override
     public void gerar(Pedido requisicao) {
@@ -23,6 +23,6 @@ public class GerarPedidoUseCase implements IGerarPedidoUseCase {
 
         // consumir servico gerar transacao
 
-        this.gateway.criarPedido(pedido);
+        this.gateway.salvarPedido(pedido);
     }
 }

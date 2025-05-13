@@ -3,13 +3,16 @@ package com.fiap.tc4_srv_pedidos.gateway.jpa;
 import com.fiap.tc4_srv_pedidos.domain.Pedido;
 import com.fiap.tc4_srv_pedidos.domain.ProdutoPedido;
 import com.fiap.tc4_srv_pedidos.domain.StatusPedidoEnum;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.UUID;
 
+@Data
+@NoArgsConstructor
 @Document("pedidos")
 public class PedidoEntityJpa {
 
@@ -18,7 +21,7 @@ public class PedidoEntityJpa {
     private String clienteId;
     private List<ProdutoPedido> produtoPedidos;
     private StatusPedidoEnum status;
-    private UUID transacaoId;
+    private String transacaoId;
     private Instant criadoEm;
     private Instant atualizadoEm;
     private Instant deletadoEm;
@@ -33,4 +36,9 @@ public class PedidoEntityJpa {
         this.atualizadoEm = pedido.getAtualizadoEm();
         this.deletadoEm = pedido.getDeletadoEm();
     }
+
+    public Pedido toPedido() {
+        return new Pedido(this);
+    }
+
 }
