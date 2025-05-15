@@ -28,7 +28,7 @@ public class PedidoController {
         }
     }
 
-    @Bean
+    @Bean("consumer-solicitacao-atualizada")
     public Consumer<SolicitacaoPagamentoOut> solicitacaoAtualizada() {
         return solicitacao -> {
             try {
