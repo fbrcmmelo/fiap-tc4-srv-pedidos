@@ -18,7 +18,7 @@ public class PagamentoGatewayImpl implements IPagamentoGateway {
             throw new IllegalStateException("Falha ao buscar solicitacao de pagamento, erro: " + e.getMessage());
         }
     }
-    
+
     @Override
     public SolicitacaoPagamentoOut solicitar(SolicitacaoPagamentoIn solicitacaoPagamentoIn) {
         try {
