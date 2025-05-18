@@ -55,4 +55,15 @@ public class Pedido {
         this.status = status;
         this.atualizadoEm = Instant.now();
     }
+
+    public void setTransacaoId(String solicitacaoId) {
+        Objects.requireNonNull(solicitacaoId, "Solicitação não pode ser nula");
+
+        if (this.transacaoId != null) {
+            throw new IllegalArgumentException("Transação já foi setada");
+        }
+
+        this.transacaoId = solicitacaoId;
+        this.atualizadoEm = Instant.now();
+    }
 }

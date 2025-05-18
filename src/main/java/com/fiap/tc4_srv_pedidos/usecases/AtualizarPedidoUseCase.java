@@ -1,9 +1,9 @@
 package com.fiap.tc4_srv_pedidos.usecases;
 
 import com.fiap.tc4_srv_pedidos.domain.StatusPedidoEnum;
-import com.fiap.tc4_srv_pedidos.gateway.IEstoqueGateway;
-import com.fiap.tc4_srv_pedidos.gateway.IPagamentoGateway;
 import com.fiap.tc4_srv_pedidos.gateway.IPedidoGateway;
+import com.fiap.tc4_srv_pedidos.gateway.clients.estoque.IEstoqueGateway;
+import com.fiap.tc4_srv_pedidos.gateway.clients.pagamento.IPagamentoGateway;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
