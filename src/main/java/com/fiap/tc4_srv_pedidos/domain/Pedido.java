@@ -56,7 +56,12 @@ public class Pedido {
         this.atualizadoEm = Instant.now();
     }
 
-    public void setTransacaoId(String solicitacaoId) {
+    public void registrarTransacaoId(String solicitacaoId) {
+
+        if (this.status != null && this.status != StatusPedidoEnum.ABERTO) {
+            throw new IllegalArgumentException("Status do pedido não pode ser diferente de ABERTO");
+        }
+
         Objects.requireNonNull(solicitacaoId, "Solicitação não pode ser nula");
 
         if (this.transacaoId != null) {

@@ -50,7 +50,7 @@ public class GerarPedidoUseCase implements IGerarPedidoUseCase {
         );
 
         pedido.atualizarStatus(solicitacao.status());
-        pedido.setTransacaoId(solicitacao.solicitacaoId());
+        pedido.registrarTransacaoId(solicitacao.solicitacaoId());
 
         this.gateway.salvarPedido(pedido);
     }
