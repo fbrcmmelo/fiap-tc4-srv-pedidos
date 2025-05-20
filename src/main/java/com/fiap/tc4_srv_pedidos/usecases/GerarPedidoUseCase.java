@@ -35,6 +35,10 @@ public class GerarPedidoUseCase implements IGerarPedidoUseCase {
 
         final var usuario = this.usuarioGateway.obterDadosUsuario(requisicao.getClienteId());
 
+        if (usuario == null) {
+            throw new IllegalArgumentException("Usuário não encontrado");
+        }
+
         final var produtos = this.obterProdutoService.obterDadosProduto(
                 requisicao.getProdutoPedidos().stream().map(ProdutoPedido::sku).toList()
         );
@@ -46,7 +50,7 @@ public class GerarPedidoUseCase implements IGerarPedidoUseCase {
         final var valorTotal = produtos.stream().map(Produto::preco).reduce(0.0, Double::sum);
 
         final var solicitacao = this.pagamentoGateway.solicitar(
-                new SolicitacaoPagamentoIn(String.valueOf(valorTotal), usuario.dadosCartaoCliente().numero())
+                new SolicitacaoPagamentoIn(String.valueOf(valorTotal), pedido.getDadosCartao().numero())
         );
 
         pedido.atualizarStatus(solicitacao.status());

@@ -54,7 +54,7 @@ public class GerarPedidoUseCaseTest {
         // Dados do usuário
         var usuario = mock(Usuario.class);
         var dadosCartao = mock(DadosCartaoCliente.class);
-        when(usuario.dadosCartaoCliente()).thenReturn(dadosCartao);
+        when(requisicao.getDadosCartao()).thenReturn(dadosCartao);
         when(usuarioGateway.obterDadosUsuario(anyString())).thenReturn(usuario);
 
         // Dados do produto
@@ -89,6 +89,7 @@ public class GerarPedidoUseCaseTest {
 
         doThrow(new RuntimeException("Erro estoque"))
                 .when(estoqueGateway).baixarEstoque(anyString(), anyInt());
+        when(usuarioGateway.obterDadosUsuario(anyString())).thenReturn(mock(Usuario.class));
 
         // Act & Assert
         assertThatThrownBy(() -> useCase.gerar(requisicao))
@@ -110,7 +111,7 @@ public class GerarPedidoUseCaseTest {
         // Dados do usuário
         var usuario = mock(Usuario.class);
         var dadosCartao = mock(DadosCartaoCliente.class);
-        when(usuario.dadosCartaoCliente()).thenReturn(dadosCartao);
+        when(requisicao.getDadosCartao()).thenReturn(dadosCartao);
         when(usuarioGateway.obterDadosUsuario(anyString())).thenReturn(usuario);
 
         // Dados do produto

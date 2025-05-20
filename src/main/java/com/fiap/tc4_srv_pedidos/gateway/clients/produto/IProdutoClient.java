@@ -6,9 +6,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 @Component
-@FeignClient(name = "produto", url = "http://localhost:8086")
+@FeignClient(name = "produtos", url = "http://localhost:8086")
 public interface IProdutoClient {
 
-    @GetMapping("/produto/{produtoId}")
+    @GetMapping("/produtos/{produtoId}")
     Produto obterDados(@PathVariable String produtoId);
 }

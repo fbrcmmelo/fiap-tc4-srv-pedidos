@@ -1,6 +1,5 @@
 package com.fiap.tc4_srv_pedidos.gateway.clients.usuario;
 
-import com.fiap.tc4_srv_pedidos.domain.DadosCartaoCliente;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -23,7 +22,9 @@ public class UsuarioGatewayImplTest {
     void testObterDadosUsuario_Success() {
         // Arrange
         String solicitacaoId = "user123";
-        Usuario expectedUsuario = new Usuario("1", "nome", "email", new DadosCartaoCliente("numero"));
+        Usuario expectedUsuario = new Usuario("cpf", new Endereco(
+                "rua teste", "bairro teste", "cidade teste", "estado teste", "cep teste", "teste")
+        );
         when(client.obterDados(solicitacaoId)).thenReturn(expectedUsuario);
 
         // Act
