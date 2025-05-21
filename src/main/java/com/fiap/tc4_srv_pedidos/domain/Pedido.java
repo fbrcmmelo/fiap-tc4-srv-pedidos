@@ -20,6 +20,7 @@ public class Pedido {
     private List<ProdutoPedido> produtoPedidos;
     private StatusPedidoEnum status;
     private String transacaoId;
+    private String descricaoStatus;
     private Instant criadoEm;
     private Instant atualizadoEm;
     private Instant deletadoEm;
@@ -48,6 +49,7 @@ public class Pedido {
         this.criadoEm = entityJpa.getCriadoEm();
         this.atualizadoEm = entityJpa.getAtualizadoEm();
         this.deletadoEm = entityJpa.getDeletadoEm();
+        this.descricaoStatus = entityJpa.getDescricaoErro();
     }
 
     public void atualizarStatus(StatusPedidoEnum status) {
@@ -70,5 +72,9 @@ public class Pedido {
 
         this.transacaoId = solicitacaoId;
         this.atualizadoEm = Instant.now();
+    }
+
+    public void setDescricaoStatus(String descricaoStatus) {
+        this.descricaoStatus = descricaoStatus;
     }
 }

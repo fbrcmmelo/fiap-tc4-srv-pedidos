@@ -2,6 +2,7 @@ package com.fiap.tc4_srv_pedidos.usecases;
 
 import com.fiap.tc4_srv_pedidos.domain.Pedido;
 import com.fiap.tc4_srv_pedidos.domain.ProdutoPedido;
+import com.fiap.tc4_srv_pedidos.domain.StatusPedidoEnum;
 import com.fiap.tc4_srv_pedidos.domain.services.ObterProdutoService;
 import com.fiap.tc4_srv_pedidos.gateway.IPedidoGateway;
 import com.fiap.tc4_srv_pedidos.gateway.clients.estoque.IEstoqueGateway;
@@ -10,8 +11,10 @@ import com.fiap.tc4_srv_pedidos.gateway.clients.pagamento.SolicitacaoPagamentoIn
 import com.fiap.tc4_srv_pedidos.gateway.clients.produto.Produto;
 import com.fiap.tc4_srv_pedidos.gateway.clients.usuario.IUsuarioGateway;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class GerarPedidoUseCase implements IGerarPedidoUseCase {
@@ -29,10 +32,6 @@ public class GerarPedidoUseCase implements IGerarPedidoUseCase {
      */
     @Override
     public void gerar(Pedido requisicao) {
-        final var pedido = new Pedido(
-                requisicao.getClienteId(), requisicao.getDadosCartao(), requisicao.getProdutoPedidos()
-        );
-
         final var usuario = this.usuarioGateway.obterDadosUsuario(requisicao.getClienteId());
 
         if (usuario == null) {
@@ -43,19 +42,38 @@ public class GerarPedidoUseCase implements IGerarPedidoUseCase {
                 requisicao.getProdutoPedidos().stream().map(ProdutoPedido::sku).toList()
         );
 
-        for (final var produto : requisicao.getProdutoPedidos()) {
-            this.estoqueGateway.baixarEstoque(produto.sku(), produto.quantidade().intValue());
-        }
-
-        final var valorTotal = produtos.stream().map(Produto::preco).reduce(0.0, Double::sum);
-
-        final var solicitacao = this.pagamentoGateway.solicitar(
-                new SolicitacaoPagamentoIn(String.valueOf(valorTotal), pedido.getDadosCartao().numero())
+        final var pedido = new Pedido(
+                requisicao.getClienteId(), requisicao.getDadosCartao(), requisicao.getProdutoPedidos()
         );
 
-        pedido.atualizarStatus(solicitacao.status());
-        pedido.registrarTransacaoId(solicitacao.solicitacaoId());
+        try {
 
-        this.gateway.salvarPedido(pedido);
+            for (final var produto : requisicao.getProdutoPedidos()) {
+                this.estoqueGateway.baixarEstoque(produto.sku(), produto.quantidade().intValue());
+            }
+
+            final var valorTotal = produtos.stream().map(Produto::preco).reduce(0.0, Double::sum);
+
+            final var solicitacao = this.pagamentoGateway.solicitar(
+                    new SolicitacaoPagamentoIn(String.valueOf(valorTotal), pedido.getDadosCartao().numero())
+            );
+
+            pedido.atualizarStatus(solicitacao.status());
+            pedido.registrarTransacaoId(solicitacao.solicitacaoId());
+        } catch (SemEstoqueException ex) {
+            log.error("Produto sem estoque, erro: {}", ex.getMessage());
+            pedido.atualizarStatus(StatusPedidoEnum.SEM_ESTOQUE);
+            pedido.setDescricaoStatus("Produto sem estoque, erro: " + ex.getMessage());
+        } catch (IllegalStateException ex) {
+            log.error("Erro ao gerar pedido, erro: {}", ex.getMessage());
+            pedido.atualizarStatus(StatusPedidoEnum.FECHADO_SEM_SUCESSO);
+            pedido.setDescricaoStatus("Erro ao gerar pedido, erro: " + ex.getMessage());
+        }  catch (Exception ex) {
+            log.error("Falha no caso de uso gerar pedido, erro: {}", ex.getMessage());
+            pedido.atualizarStatus(StatusPedidoEnum.FECHADO_SEM_SUCESSO);
+            pedido.setDescricaoStatus("Descricao do erro: " + ex.getMessage());
+        } finally {
+            this.gateway.salvarPedido(pedido);
+        }
     }
 }

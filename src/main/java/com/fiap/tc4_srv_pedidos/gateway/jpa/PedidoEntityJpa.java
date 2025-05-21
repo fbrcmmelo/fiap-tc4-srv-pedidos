@@ -25,6 +25,7 @@ public class PedidoEntityJpa {
     private Instant criadoEm;
     private Instant atualizadoEm;
     private Instant deletadoEm;
+    private String descricaoErro;
 
     public PedidoEntityJpa(Pedido pedido) {
         this.id = pedido.getId();
@@ -35,6 +36,7 @@ public class PedidoEntityJpa {
         this.criadoEm = pedido.getCriadoEm();
         this.atualizadoEm = pedido.getAtualizadoEm();
         this.deletadoEm = pedido.getDeletadoEm();
+        this.descricaoErro = pedido.getDescricaoStatus();
     }
 
     public Pedido toPedido() {

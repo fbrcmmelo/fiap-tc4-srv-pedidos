@@ -1,6 +1,7 @@
 package com.fiap.tc4_srv_pedidos.gateway.clients.estoque;
 
 import com.fiap.tc4_srv_pedidos.gateway.clients.produto.ProdutoEstoqueRequest;
+import com.fiap.tc4_srv_pedidos.usecases.SemEstoqueException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -70,5 +71,17 @@ public class EstoqueGatewayImplTest {
         assertThatThrownBy(() -> estoqueGateway.baixarEstoque(produtoId, quantidade))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Falha ao baixar estoque");
+    }
+
+    @Test
+    void testBaixarEstoque_ThrowsSemEstoqueExceptionWhenInsuficiente() {
+        String produtoId = "prod789";
+        int quantidade = 2;
+        doThrow(new RuntimeException("Quantidade insuficiente em estoque"))
+                .when(client).baixarEstoque(any());
+
+        assertThatThrownBy(() -> estoqueGateway.baixarEstoque(produtoId, quantidade))
+                .isInstanceOf(SemEstoqueException.class)
+                .hasMessageContaining("Quantidade insuficiente em estoque");
     }
 }

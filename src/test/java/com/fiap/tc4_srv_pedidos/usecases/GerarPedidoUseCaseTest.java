@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
@@ -77,7 +78,7 @@ public class GerarPedidoUseCaseTest {
     }
 
     @Test
-    void deveLancarErroAoBaixarEstoque() {
+    void deveLancarErroAoBaixarEstoque_MasSalvarOPedido_ComINformacoesDoErro() {
         // Arrange
         Pedido requisicao = mock(Pedido.class);
         ProdutoPedido produtoPedido = mock(ProdutoPedido.class);
@@ -86,15 +87,21 @@ public class GerarPedidoUseCaseTest {
         when(requisicao.getProdutoPedidos()).thenReturn(List.of(produtoPedido));
         when(produtoPedido.sku()).thenReturn("sku1");
         when(produtoPedido.quantidade()).thenReturn(2L);
+        when(requisicao.getStatus()).thenReturn(StatusPedidoEnum.SEM_ESTOQUE);
 
         doThrow(new RuntimeException("Erro estoque"))
                 .when(estoqueGateway).baixarEstoque(anyString(), anyInt());
         when(usuarioGateway.obterDadosUsuario(anyString())).thenReturn(mock(Usuario.class));
+        doThrow(SemEstoqueException.class).when(estoqueGateway).baixarEstoque(anyString(), anyInt());
 
         // Act & Assert
-        assertThatThrownBy(() -> useCase.gerar(requisicao))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Erro estoque");
+        useCase.gerar(requisicao);
+
+        assertThat(requisicao.getStatus())
+                .isNotNull()
+                .isEqualTo(StatusPedidoEnum.SEM_ESTOQUE);
+        verify(estoqueGateway).baixarEstoque("sku1", 2);
+        verify(gateway).salvarPedido(any(Pedido.class));
     }
 
     @Test
@@ -107,6 +114,7 @@ public class GerarPedidoUseCaseTest {
         when(requisicao.getProdutoPedidos()).thenReturn(List.of(produtoPedido));
         when(produtoPedido.sku()).thenReturn("sku1");
         when(produtoPedido.quantidade()).thenReturn(2L);
+        when(requisicao.getStatus()).thenReturn(StatusPedidoEnum.FECHADO_SEM_SUCESSO);
 
         // Dados do usuário
         var usuario = mock(Usuario.class);
@@ -120,11 +128,99 @@ public class GerarPedidoUseCaseTest {
         when(obterProdutoService.obterDadosProduto(anyList())).thenReturn(List.of(produto));
 
         // Erro na pagamento
-        when(pagamentoGateway.solicitar(any())).thenThrow(new RuntimeException("Erro pagamento"));
+        when(pagamentoGateway.solicitar(any())).thenThrow(new IllegalStateException("Erro pagamento"));
 
         // Act & Assert
+        useCase.gerar(requisicao);
+
+        assertThat(requisicao.getStatus())
+                .isNotNull()
+                .isEqualTo(StatusPedidoEnum.FECHADO_SEM_SUCESSO);
+        verify(gateway).salvarPedido(any(Pedido.class));
+    }
+
+    @Test
+    void lancaExcecaoQuandoUsuarioNaoEncontrado() {
+        Pedido requisicao = mock(Pedido.class);
+        when(requisicao.getClienteId()).thenReturn("clienteInexistente");
+        when(usuarioGateway.obterDadosUsuario(anyString())).thenReturn(null);
+
         assertThatThrownBy(() -> useCase.gerar(requisicao))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Erro pagamento");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Usuário não encontrado");
+        verify(gateway, never()).salvarPedido(any());
+    }
+
+    // Deve salvar pedido com descrição de erro genérico em caso de exceção inesperada
+    @Test
+    void salvaPedidoComDescricaoDeErroGenericoQuandoException() {
+        Pedido requisicao = mock(Pedido.class);
+        ProdutoPedido produtoPedido = mock(ProdutoPedido.class);
+        when(requisicao.getClienteId()).thenReturn("1L");
+        when(requisicao.getDadosCartao()).thenReturn(new DadosCartaoCliente("numero"));
+        when(requisicao.getProdutoPedidos()).thenReturn(List.of(produtoPedido));
+        when(produtoPedido.sku()).thenReturn("sku1");
+        when(produtoPedido.quantidade()).thenReturn(2L);
+
+        when(usuarioGateway.obterDadosUsuario(anyString())).thenReturn(mock(Usuario.class));
+        when(obterProdutoService.obterDadosProduto(anyList())).thenReturn(List.of(mock(Produto.class)));
+        doThrow(new RuntimeException("Falha inesperada")).when(estoqueGateway).baixarEstoque(anyString(), anyInt());
+
+        useCase.gerar(requisicao);
+
+        verify(gateway).salvarPedido(argThat(pedido ->
+                pedido.getDescricaoStatus() != null &&
+                        pedido.getDescricaoStatus().contains("Falha inesperada") &&
+                        pedido.getStatus() == StatusPedidoEnum.FECHADO_SEM_SUCESSO
+        ));
+    }
+
+    // Deve salvar pedido com descrição específica para SemEstoqueException
+    @Test
+    void salvaPedidoComDescricaoDeSemEstoqueException() {
+        Pedido requisicao = mock(Pedido.class);
+        ProdutoPedido produtoPedido = mock(ProdutoPedido.class);
+        when(requisicao.getClienteId()).thenReturn("1L");
+        when(requisicao.getDadosCartao()).thenReturn(new DadosCartaoCliente("numero"));
+        when(requisicao.getProdutoPedidos()).thenReturn(List.of(produtoPedido));
+        when(produtoPedido.sku()).thenReturn("sku1");
+        when(produtoPedido.quantidade()).thenReturn(2L);
+
+        when(usuarioGateway.obterDadosUsuario(anyString())).thenReturn(mock(Usuario.class));
+        when(obterProdutoService.obterDadosProduto(anyList())).thenReturn(List.of(mock(Produto.class)));
+        doThrow(new SemEstoqueException("Sem estoque")).when(estoqueGateway).baixarEstoque(anyString(), anyInt());
+
+        useCase.gerar(requisicao);
+
+        verify(gateway).salvarPedido(argThat(pedido ->
+                pedido.getDescricaoStatus() != null &&
+                        pedido.getDescricaoStatus().contains("Sem estoque") &&
+                        pedido.getStatus() == StatusPedidoEnum.SEM_ESTOQUE
+        ));
+    }
+
+    // Deve salvar pedido com descrição específica para IllegalStateException
+    @Test
+    void salvaPedidoComDescricaoDeIllegalStateException() {
+        Pedido requisicao = mock(Pedido.class);
+        ProdutoPedido produtoPedido = mock(ProdutoPedido.class);
+        when(requisicao.getClienteId()).thenReturn("1L");
+        when(requisicao.getDadosCartao()).thenReturn(new DadosCartaoCliente("numero"));
+        when(requisicao.getProdutoPedidos()).thenReturn(List.of(produtoPedido));
+        when(produtoPedido.sku()).thenReturn("sku1");
+        when(produtoPedido.quantidade()).thenReturn(2L);
+
+        when(usuarioGateway.obterDadosUsuario(anyString())).thenReturn(mock(Usuario.class));
+        when(obterProdutoService.obterDadosProduto(anyList())).thenReturn(List.of(mock(Produto.class)));
+        doNothing().when(estoqueGateway).baixarEstoque(anyString(), anyInt());
+        when(pagamentoGateway.solicitar(any())).thenThrow(new IllegalStateException("Falha pagamento"));
+
+        useCase.gerar(requisicao);
+
+        verify(gateway).salvarPedido(argThat(pedido ->
+                pedido.getDescricaoStatus() != null &&
+                        pedido.getDescricaoStatus().contains("Falha pagamento") &&
+                        pedido.getStatus() == StatusPedidoEnum.FECHADO_SEM_SUCESSO
+        ));
     }
 }
