@@ -20,10 +20,9 @@ public class AtualizarPedidoUseCase implements IAtualizarPedidoUseCase {
         var pedido = this.pedidoGateway.buscarPedidoPorSolicitacaoPagamentoId(solicitacaoId);
         final var solicitacao = this.pagamentoGateway.buscarSolicitacaoPagamento(solicitacaoId);
 
-        pedido.atualizarStatus(solicitacao.status());
+        pedido.atualizarStatus(solicitacao.statusPagamento());
 
-        if (StatusPedidoEnum.FECHADO_SEM_SUCESSO.equals(solicitacao.status()) ||
-                StatusPedidoEnum.SEM_ESTOQUE.equals(solicitacao.status())) {
+        if (StatusPedidoEnum.FECHADO_SEM_SUCESSO.equals(solicitacao.statusPagamento())) {
 
             // revertendo quantidade estoque para pagamentos invalidos
             try {

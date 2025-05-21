@@ -65,7 +65,7 @@ public class GerarPedidoUseCaseTest {
 
         // Solicitação de pagamento
         var solicitacao = mock(SolicitacaoPagamentoOut.class);
-        when(solicitacao.status()).thenReturn(StatusPedidoEnum.ABERTO);
+        when(solicitacao.statusPagamento()).thenReturn(StatusPedidoEnum.ABERTO);
         when(solicitacao.solicitacaoId()).thenReturn("trans123");
         when(pagamentoGateway.solicitar(any())).thenReturn(solicitacao);
 

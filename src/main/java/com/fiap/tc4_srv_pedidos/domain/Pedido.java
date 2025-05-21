@@ -38,6 +38,7 @@ public class Pedido {
         this.clienteId = clienteId;
         this.dadosCartao = dadosCartao;
         this.produtoPedidos = produtoPedidos;
+        this.criadoEm = Instant.now();
     }
 
     public Pedido(PedidoEntityJpa entityJpa) {

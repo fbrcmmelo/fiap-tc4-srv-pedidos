@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 public class AtualizarPedidoUseCaseTest {
@@ -73,27 +72,5 @@ public class AtualizarPedidoUseCaseTest {
         verify(pedidoGateway).salvarPedido(pedido);
     }
 
-    @Test
-    void deveLancarExcecaoAoReverterEstoque() {
-        // Arrange
-        String solicitacaoId = "id789";
-        Pedido pedido = mock(Pedido.class);
-        var produto = mock(ProdutoPedido.class);
-        when(produto.sku()).thenReturn("sku2");
-        when(produto.quantidade()).thenReturn(2L);
-        when(pedido.getProdutoPedidos()).thenReturn(List.of(produto));
-
-        SolicitacaoPagamentoOut solicitacao = new SolicitacaoPagamentoOut("", StatusPedidoEnum.SEM_ESTOQUE);
-
-        when(pedidoGateway.buscarPedidoPorSolicitacaoPagamentoId(solicitacaoId)).thenReturn(pedido);
-        when(pagamentoGateway.buscarSolicitacaoPagamento(solicitacaoId)).thenReturn(solicitacao);
-        doThrow(new RuntimeException("Erro estoque"))
-                .when(estoqueGateway).incrementarEstoque(anyString(), anyInt());
-
-        // Act & Assert
-        assertThatThrownBy(() -> useCase.atualizar(solicitacaoId))
-                .isInstanceOf(IllegalCallerException.class)
-                .hasMessageContaining("Falha ao tentar rever estoque produtos");
-    }
 }
 

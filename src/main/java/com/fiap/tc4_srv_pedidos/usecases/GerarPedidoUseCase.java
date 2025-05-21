@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -46,10 +48,12 @@ public class GerarPedidoUseCase implements IGerarPedidoUseCase {
                 requisicao.getClienteId(), requisicao.getDadosCartao(), requisicao.getProdutoPedidos()
         );
 
-        try {
+        final var produtosBaixados = new ArrayList<ProdutoPedido>();
 
+        try {
             for (final var produto : requisicao.getProdutoPedidos()) {
                 this.estoqueGateway.baixarEstoque(produto.sku(), produto.quantidade().intValue());
+                produtosBaixados.add(produto);
             }
 
             final var valorTotal = produtos.stream().map(Produto::preco).reduce(0.0, Double::sum);
@@ -58,22 +62,35 @@ public class GerarPedidoUseCase implements IGerarPedidoUseCase {
                     new SolicitacaoPagamentoIn(String.valueOf(valorTotal), pedido.getDadosCartao().numero())
             );
 
-            pedido.atualizarStatus(solicitacao.status());
+            pedido.atualizarStatus(solicitacao.statusPagamento());
             pedido.registrarTransacaoId(solicitacao.solicitacaoId());
         } catch (SemEstoqueException ex) {
             log.error("Produto sem estoque, erro: {}", ex.getMessage());
+
             pedido.atualizarStatus(StatusPedidoEnum.SEM_ESTOQUE);
             pedido.setDescricaoStatus("Produto sem estoque, erro: " + ex.getMessage());
+
+            rollBackBaixaProdutos(produtosBaixados);
         } catch (IllegalStateException ex) {
             log.error("Erro ao gerar pedido, erro: {}", ex.getMessage());
             pedido.atualizarStatus(StatusPedidoEnum.FECHADO_SEM_SUCESSO);
             pedido.setDescricaoStatus("Erro ao gerar pedido, erro: " + ex.getMessage());
-        }  catch (Exception ex) {
+
+            rollBackBaixaProdutos(produtosBaixados);
+        } catch (Exception ex) {
             log.error("Falha no caso de uso gerar pedido, erro: {}", ex.getMessage());
             pedido.atualizarStatus(StatusPedidoEnum.FECHADO_SEM_SUCESSO);
             pedido.setDescricaoStatus("Descricao do erro: " + ex.getMessage());
+
+            rollBackBaixaProdutos(produtosBaixados);
         } finally {
             this.gateway.salvarPedido(pedido);
+        }
+    }
+
+    private void rollBackBaixaProdutos(ArrayList<ProdutoPedido> produtosBaixados) {
+        for (final var produto : produtosBaixados) {
+            this.estoqueGateway.incrementarEstoque(produto.sku(), produto.quantidade().intValue());
         }
     }
 }
