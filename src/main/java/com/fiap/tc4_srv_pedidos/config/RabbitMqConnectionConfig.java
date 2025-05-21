@@ -1,7 +1,7 @@
 package com.fiap.tc4_srv_pedidos.config;
 
 import com.fiap.tc4_srv_pedidos.consts.FilaConstants;
-import com.fiap.tc4_srv_pedidos.controller.PedidoController;
+import com.fiap.tc4_srv_pedidos.controller.PedidoConsumer;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
@@ -22,7 +22,7 @@ public class RabbitMqConnectionConfig {
     }
 
     @Bean
-    MessageListenerAdapter messageListenerAdapter(PedidoController consumer) {
+    MessageListenerAdapter messageListenerAdapter(PedidoConsumer consumer) {
         return new MessageListenerAdapter(consumer, "gerarPedido");
     }
 

@@ -4,38 +4,29 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fiap.tc4_srv_pedidos.domain.Pedido;
 import com.fiap.tc4_srv_pedidos.usecases.IAtualizarPedidoUseCase;
 import com.fiap.tc4_srv_pedidos.usecases.IGerarPedidoUseCase;
+import com.fiap.tc4_srv_pedidos.usecases.IListarPedidosUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 @Slf4j
-@Component
+@RestController
 @RequiredArgsConstructor
+@RequestMapping("/pedidos")
 public class PedidoController {
 
-    private final IGerarPedidoUseCase gerarPedidoUseCase;
-    private final IAtualizarPedidoUseCase atualizarPedidoUseCase;
+    private final IListarPedidosUseCase listarUseCase;
 
-    public void gerarPedido(String mensagem) {
-        try {
-            final var pedido = new ObjectMapper().readValue(mensagem, Pedido.class);
-            this.gerarPedidoUseCase.gerar(pedido);
-        } catch (Exception e) {
-            log.error("Falha ao gerar pedido, erro: {}", e.getMessage());
-        }
-    }
-
-    @Bean("consumer-solicitacao-atualizada")
-    public Consumer<SolicitacaoPagamentoOut> solicitacaoAtualizada() {
-        return solicitacao -> {
-            try {
-                this.atualizarPedidoUseCase.atualizar(solicitacao.solicitacaoId());
-            } catch (Exception e) {
-                log.error("Erro ao processar notificação: {}", e.getMessage());
-            }
-        };
+    public List<PedidoDTO> listarPedidos() {
+        return this.listarUseCase.listarPedidos()
+                .stream()
+                .map(PedidoDTO::from)
+                .toList();
     }
 }

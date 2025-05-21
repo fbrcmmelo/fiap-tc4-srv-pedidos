@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @Component
-@FeignClient(name = "pagamento", url = "http://localhost:8084")
+@FeignClient(name = "pagamento", url = "srv-pagamento:8083")
 public interface IPagamentoClient {
 
     @GetMapping("/pagamento/{solicitacaoId}")

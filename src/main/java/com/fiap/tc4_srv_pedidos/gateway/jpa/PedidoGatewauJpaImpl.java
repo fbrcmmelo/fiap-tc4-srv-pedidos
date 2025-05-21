@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 @RequiredArgsConstructor
 public class PedidoGatewauJpaImpl implements IPedidoGateway {
@@ -25,5 +27,13 @@ public class PedidoGatewauJpaImpl implements IPedidoGateway {
         return this.repository.findOne(Example.of(pedidoEntityJpa))
                 .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado"))
                 .toPedido();
+    }
+
+    @Override
+    public List<Pedido> listarPedidos() {
+        return this.repository.findAll()
+                .stream()
+                .map(PedidoEntityJpa::toPedido)
+                .toList();
     }
 }

@@ -1,84 +1,59 @@
 package com.fiap.tc4_srv_pedidos.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fiap.tc4_srv_pedidos.domain.Pedido;
-import com.fiap.tc4_srv_pedidos.usecases.IAtualizarPedidoUseCase;
-import com.fiap.tc4_srv_pedidos.usecases.IGerarPedidoUseCase;
+import com.fiap.tc4_srv_pedidos.usecases.IListarPedidosUseCase;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-import java.util.function.Consumer;
+import java.util.List;
 
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
-public class PedidoControllerTest {
+class PedidoControllerTest {
 
-    private IGerarPedidoUseCase gerarPedidoUseCase;
-    private IAtualizarPedidoUseCase atualizarPedidoUseCase;
+    @InjectMocks
     private PedidoController controller;
-    private ObjectMapper objectMapper;
+    @Mock
+    private IListarPedidosUseCase listarUseCase;
+
+    private AutoCloseable openMocks;
 
     @BeforeEach
     void setUp() {
-        gerarPedidoUseCase = mock(IGerarPedidoUseCase.class);
-        atualizarPedidoUseCase = mock(IAtualizarPedidoUseCase.class);
-        controller = new PedidoController(gerarPedidoUseCase, atualizarPedidoUseCase);
-        objectMapper = new ObjectMapper();
+        openMocks = MockitoAnnotations.openMocks(this);
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        openMocks.close();
     }
 
     @Test
-    void deveProcessarGerarPedidoComSucesso() throws Exception {
-        // Arrange
-        Pedido pedido = new Pedido();
-        String mensagem = objectMapper.writeValueAsString(pedido);
+    void listarPedidos_DeveRetornarListaDePedidosDTOQuandoExistemPedidos() {
+        Pedido pedido1 = new Pedido();
+        Pedido pedido2 = new Pedido();
+        when(listarUseCase.listarPedidos()).thenReturn(List.of(pedido1, pedido2));
 
-        // Act
-        controller.gerarPedido(mensagem);
+        List<PedidoDTO> pedidos = controller.listarPedidos();
 
-        // Assert
-        verify(gerarPedidoUseCase).gerar(any(Pedido.class));
+        assertThat(pedidos)
+                .hasSize(2);
+        assertThat(pedidos).
+                containsExactly(PedidoDTO.from(pedido1), PedidoDTO.from(pedido2));
     }
 
     @Test
-    void deveRegistrarErroAoProcessarGerarPedido() throws Exception {
-        // Arrange
-        String mensagemInvalida = "mensagem inválida";
+    void listarPedidos_DeveRetornarListaVaziaDePedidosDTOQuandoNaoExistemPedidos() {
+        when(listarUseCase.listarPedidos()).thenReturn(List.of());
 
-        // Act
-        controller.gerarPedido(mensagemInvalida);
+        List<PedidoDTO> pedidos = controller.listarPedidos();
 
-        // Assert
-        verify(gerarPedidoUseCase, never()).gerar(any());
+        assertThat(pedidos).isEmpty();
     }
 
-    @Test
-    void solicitacaoAtualizadaDeveChamarAtualizarPedido() {
-        // Arrange
-        String solicitacaoId = "solicitacao123";
-        SolicitacaoPagamentoOut solicitacao = mock(SolicitacaoPagamentoOut.class);
-        when(solicitacao.solicitacaoId()).thenReturn(solicitacaoId);
-
-        Consumer<SolicitacaoPagamentoOut> consumer = controller.solicitacaoAtualizada();
-
-        // Act
-        consumer.accept(solicitacao);
-
-        // Assert
-        verify(atualizarPedidoUseCase).atualizar(solicitacaoId);
-    }
-
-    @Test
-    void solicitacaoAtualizadaDeveRegistrarErroAoLidarComExcecao() {
-        // Arrange
-        SolicitacaoPagamentoOut solicitacao = mock(SolicitacaoPagamentoOut.class);
-        when(solicitacao.solicitacaoId()).thenReturn("id");
-        doThrow(new RuntimeException("Erro ao atualizar"))
-                .when(atualizarPedidoUseCase).atualizar(anyString());
-
-        Consumer<SolicitacaoPagamentoOut> consumer = controller.solicitacaoAtualizada();
-
-        // Act
-        consumer.accept(solicitacao);
-        verify(atualizarPedidoUseCase).atualizar("id");
-    }
 }

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Example;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -66,4 +67,33 @@ public class PedidoGatewauJpaImplTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Pedido não encontrado");
     }
+
+    @Test
+    void listarPedidos_RetornaListaDePedidos() {
+        // Arrange
+        PedidoEntityJpa entity1 = new PedidoEntityJpa();
+        PedidoEntityJpa entity2 = new PedidoEntityJpa();
+        when(repository.findAll()).thenReturn(List.of(entity1, entity2));
+
+        // Act
+        List<Pedido> pedidos = gateway.listarPedidos();
+
+        // Assert
+        verify(repository).findAll();
+        assertThat(pedidos).hasSize(2);
+    }
+
+    @Test
+    void listarPedidos_RetornaListaVaziaQuandoNaoHaPedidos() {
+        // Arrange
+        when(repository.findAll()).thenReturn(List.of());
+
+        // Act
+        List<Pedido> pedidos = gateway.listarPedidos();
+
+        // Assert
+        verify(repository).findAll();
+        assertThat(pedidos).isEmpty();
+    }
+
 }
