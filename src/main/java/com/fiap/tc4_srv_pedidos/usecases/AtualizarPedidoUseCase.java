@@ -7,6 +7,8 @@ import com.fiap.tc4_srv_pedidos.gateway.clients.pagamento.IPagamentoGateway;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
+
 @Component
 @RequiredArgsConstructor
 public class AtualizarPedidoUseCase implements IAtualizarPedidoUseCase {
@@ -22,7 +24,9 @@ public class AtualizarPedidoUseCase implements IAtualizarPedidoUseCase {
 
         pedido.atualizarStatus(solicitacao.statusPagamento());
 
-        if (StatusPedidoEnum.FECHADO_SEM_SUCESSO.equals(solicitacao.statusPagamento())) {
+        if (Arrays.asList(
+                StatusPedidoEnum.FECHADO_SEM_SUCESSO,
+                StatusPedidoEnum.FECHADO_SEM_CREDITO).contains(solicitacao.statusPagamento())) {
 
             // revertendo quantidade estoque para pagamentos invalidos
             try {
