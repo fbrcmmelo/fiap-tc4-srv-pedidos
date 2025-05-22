@@ -49,14 +49,21 @@ public class GerarPedidoUseCase implements IGerarPedidoUseCase {
         );
 
         final var produtosBaixados = new ArrayList<ProdutoPedido>();
-
         try {
             for (final var produto : requisicao.getProdutoPedidos()) {
                 this.estoqueGateway.baixarEstoque(produto.sku(), produto.quantidade().intValue());
                 produtosBaixados.add(produto);
             }
 
-            final var valorTotal = produtos.stream().map(Produto::preco).reduce(0.0, Double::sum);
+            var valorTotal = 0.0;
+            for (final var produto : produtos) {
+                final var produtoPedido = requisicao.getProdutoPedidos().stream()
+                        .filter(p -> p.sku().equals(produto.sku()))
+                        .findFirst()
+                        .orElse(new ProdutoPedido("1", 1L));
+
+                valorTotal += produto.preco() * produtoPedido.quantidade().intValue();
+            }
 
             final var solicitacao = this.pagamentoGateway.solicitar(
                     new SolicitacaoPagamentoIn(String.valueOf(valorTotal), pedido.getDadosCartao().numero())
